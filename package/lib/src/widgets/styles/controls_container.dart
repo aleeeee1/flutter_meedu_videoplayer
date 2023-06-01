@@ -284,16 +284,21 @@ class _ControlsContainerState extends State<ControlsContainer> {
                     child: Stack(
                       alignment: AlignmentDirectional.bottomCenter,
                       children: [
-                        Container(color: Colors.black38),
+                        Container(
+                          color:
+                              Theme.of(context).colorScheme.secondaryContainer,
+                        ),
                         Container(
                           height: _.volume.value * widget.responsive.height / 2,
-                          color: Colors.blue,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSecondaryContainer,
                         ),
                         Container(
                             padding: const EdgeInsets.all(5),
-                            child: const Icon(
+                            child: Icon(
                               Icons.music_note,
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.onSecondary,
                             )),
                       ],
                     ),
@@ -322,18 +327,24 @@ class _ControlsContainerState extends State<ControlsContainer> {
                     child: Stack(
                       alignment: AlignmentDirectional.bottomCenter,
                       children: [
-                        Container(color: Colors.black38),
+                        Container(
+                          color:
+                              Theme.of(context).colorScheme.secondaryContainer,
+                        ),
                         Container(
                           height:
                               _.brightness.value * widget.responsive.height / 2,
-                          color: Colors.blue,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSecondaryContainer,
                         ),
                         Container(
-                            padding: const EdgeInsets.all(5),
-                            child: const Icon(
-                              Icons.wb_sunny,
-                              color: Colors.white,
-                            )),
+                          padding: const EdgeInsets.all(5),
+                          child: Icon(
+                            Icons.wb_sunny,
+                            color: Theme.of(context).colorScheme.onSecondary,
+                          ),
+                        ),
                       ],
                     ),
                   ),
