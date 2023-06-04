@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_meedu_videoplayer/meedu_player.dart';
@@ -277,9 +278,14 @@ class _ControlsContainerState extends State<ControlsContainer> {
                 padding: const EdgeInsets.all(10),
                 margin: const EdgeInsets.all(10),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(40),
+                    topRight: Radius.circular(40),
+                    bottomLeft: Radius.circular(10),
+                    bottomRight: Radius.circular(10),
+                  ),
                   child: SizedBox(
-                    height: widget.responsive.height / 2,
+                    height: (widget.responsive.height / 2) + 35,
                     width: 35,
                     child: Stack(
                       alignment: AlignmentDirectional.bottomCenter,
@@ -288,18 +294,35 @@ class _ControlsContainerState extends State<ControlsContainer> {
                           color:
                               Theme.of(context).colorScheme.secondaryContainer,
                         ),
-                        Container(
-                          height: _.volume.value * widget.responsive.height / 2,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSecondaryContainer,
+                        ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(40),
+                            topRight: Radius.circular(40),
+                            bottomLeft: Radius.circular(10),
+                            bottomRight: Radius.circular(10),
+                          ),
+                          child: Container(
+                            height: (_.volume.value *
+                                    widget.responsive.height /
+                                    2) +
+                                35,
+                            width: 35,
+                            color: Theme.of(context).colorScheme.primary,
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: Container(
+                                padding: const EdgeInsets.only(top: 10),
+                                child: Icon(
+                                  _.volume.value > 0
+                                      ? Icons.music_note
+                                      : Icons.music_off,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                        Container(
-                            padding: const EdgeInsets.all(5),
-                            child: Icon(
-                              Icons.music_note,
-                              color: Theme.of(context).colorScheme.onSecondary,
-                            )),
                       ],
                     ),
                   ),
@@ -320,9 +343,14 @@ class _ControlsContainerState extends State<ControlsContainer> {
                 padding: const EdgeInsets.all(10),
                 margin: const EdgeInsets.all(10),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                    bottomLeft: Radius.circular(10),
+                    bottomRight: Radius.circular(10),
+                  ),
                   child: SizedBox(
-                    height: widget.responsive.height / 2,
+                    height: (widget.responsive.height / 2) + 35,
                     width: 35,
                     child: Stack(
                       alignment: AlignmentDirectional.bottomCenter,
@@ -331,18 +359,30 @@ class _ControlsContainerState extends State<ControlsContainer> {
                           color:
                               Theme.of(context).colorScheme.secondaryContainer,
                         ),
-                        Container(
-                          height:
-                              _.brightness.value * widget.responsive.height / 2,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSecondaryContainer,
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(5),
-                          child: Icon(
-                            Icons.wb_sunny,
-                            color: Theme.of(context).colorScheme.onSecondary,
+                        ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(40),
+                            topRight: Radius.circular(40),
+                            bottomLeft: Radius.circular(10),
+                            bottomRight: Radius.circular(10),
+                          ),
+                          child: Container(
+                            height: (_.brightness.value *
+                                    widget.responsive.height /
+                                    2) +
+                                35,
+                            color: Theme.of(context).colorScheme.primary,
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: Container(
+                                padding: const EdgeInsets.only(top: 10),
+                                child: Icon(
+                                  Icons.wb_sunny,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ],
