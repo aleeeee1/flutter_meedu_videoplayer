@@ -38,7 +38,7 @@ public class FlutterMeeduVideoplayerPlugin implements FlutterPlugin, MethodCallH
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-        channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "com.zezo357.flutter_meedu_videoplayer");
+        channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "flutter_meedu_videoplayer");
         channel.setMethodCallHandler(this);
     }
 

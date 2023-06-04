@@ -387,11 +387,15 @@ class MeeduPlayerController {
 
     _pipAvailable.value = false;
     if (pipEnabled) {
-      if (UniversalPlatform.isAndroid) {
+      if (UniversalPlatform.isAndroid || UniversalPlatform.isIOS) {
         // get the OS version and check if pip is available
         _pipManager.checkPipAvailable().then(
-              (value) => _pipAvailable.value = value,
+              (value) => {
+                customDebugPrint("PiP available: $value"),
+                _pipAvailable.value = value
+              },
             );
+
         // listen the pip mode changes
         _pipModeWorker = _pipManager.isInPipMode.ever(_onPipModeChanged);
       } else if (UniversalPlatform.isDesktop) {
@@ -1193,8 +1197,14 @@ class MeeduPlayerController {
         await _enterPipAndroid(context);
       } else if (UniversalPlatform.isDesktop) {
         await _enterPipDesktop(context);
+      } else if (UniversalPlatform.isIOS) {
+        await _enterPipIOS(context);
       }
     }
+  }
+
+  Future<void> _enterPipIOS(BuildContext context) async {
+    await videoPlayerController!.startPictureInPicture();
   }
 
   Future<void> _enterPipAndroid(BuildContext context) async {

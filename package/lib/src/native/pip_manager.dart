@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_meedu/meedu.dart';
 
 class PipManager {
-  final _channel = const MethodChannel("com.zezo357.flutter_meedu_videoplayer");
+  final _channel = const MethodChannel("flutter_meedu_videoplayer");
 
   final Completer<double> _osVersion = Completer();
   final Completer<bool> _pipAvailable = Completer();
@@ -48,6 +48,8 @@ class PipManager {
       if (osVersion >= 7) {
         return true;
       }
+    } else if (Platform.isIOS) {
+      return await _channel.invokeMethod('isPipAvailable');
     }
     _pipAvailable.complete(available);
     return available;
