@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_meedu/meedu.dart';
 import 'package:flutter_meedu_videoplayer/src/helpers/desktop_pip_bk.dart';
 import 'package:flutter_meedu_videoplayer/src/native/pip_manager.dart';
+import 'package:flutter_meedu_videoplayer/src/video_player_used.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -456,10 +457,24 @@ class MeeduPlayerController {
 
     if (buffered.isNotEmpty) {
       _buffered.value = buffered;
-      isBuffering.value =
-          value.isPlaying && position.inSeconds >= buffered.last.end.inSeconds;
-      bufferedPercent.value =
-          buffered.last.end.inSeconds / duration.value.inSeconds;
+
+      // Calculate the end time of the last buffered segment
+      final lastBufferedEnd = buffered.last.end.inSeconds;
+
+      // Check if the video is playing and the position is near the end of the buffer
+      if (VideoPlayerUsed.mediaKit) {
+        isBuffering.value =
+            value.isPlaying && position.inSeconds > (lastBufferedEnd);
+      } else {
+        isBuffering.value =
+            value.isPlaying && position.inSeconds >= (lastBufferedEnd);
+      }
+      //respect the native is buffering flag
+      isBuffering.value = isBuffering.value || value.isBuffering;
+
+      // Calculate the buffered percentage relative to the total video duration
+      // Update the buffered percentage value
+      bufferedPercent.value = lastBufferedEnd / duration.value.inSeconds;
     }
 
     // save the volume value
@@ -575,7 +590,10 @@ class MeeduPlayerController {
     }
     _position.value = position;
     customDebugPrint(
+        "position in seek function is ${_position.value.toString()}");
+    customDebugPrint(
         "duration in seek function is ${duration.value.toString()}");
+
     if (duration.value.inSeconds != 0) {
       await _videoPlayerController?.seekTo(position);
 
@@ -642,10 +660,12 @@ class MeeduPlayerController {
 
   void onChangedSliderStart() {
     _isSliderMoving = true;
+    controls = true;
   }
 
   onChangedSlider(double v) {
     _sliderPosition.value = Duration(seconds: v.floor());
+    controls = true;
   }
 
   void onChangedSliderEnd() {

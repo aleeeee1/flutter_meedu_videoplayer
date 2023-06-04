@@ -1,3 +1,18 @@
+## 4.2.11-dev-5
+* Updates to `video_player_media_kit 0.0.16`
+* Fixes seeking issue
+* Removed flickering of buffering when using media_kit
+* Fixes position slider hiding when changing position
+
+
+
+## 4.2.11-dev-4
+* Updates to `video_player_media_kit 0.0.15`
+* Fixes errors happening at the end of the video
+* Fixes buffering indicator flickering when playing high quality video
+* Only log media_kit errors to avoid catching handled errors.
+
+
 ## 4.2.11-dev-3
 * Updates to `video_player_media_kit 0.0.13`
 * Fixes media_kit errors not being caught
