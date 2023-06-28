@@ -278,11 +278,8 @@ class _ControlsContainerState extends State<ControlsContainer> {
                 padding: const EdgeInsets.all(10),
                 margin: const EdgeInsets.all(10),
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(40),
-                    topRight: Radius.circular(40),
-                    bottomLeft: Radius.circular(10),
-                    bottomRight: Radius.circular(10),
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(40),
                   ),
                   child: SizedBox(
                     height: (widget.responsive.height / 2) + 35,
@@ -295,11 +292,8 @@ class _ControlsContainerState extends State<ControlsContainer> {
                               Theme.of(context).colorScheme.secondaryContainer,
                         ),
                         ClipRRect(
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(40),
-                            topRight: Radius.circular(40),
-                            bottomLeft: Radius.circular(10),
-                            bottomRight: Radius.circular(10),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(40),
                           ),
                           child: Container(
                             height: (_.volume.value *
@@ -311,7 +305,7 @@ class _ControlsContainerState extends State<ControlsContainer> {
                             child: Align(
                               alignment: Alignment.topCenter,
                               child: Container(
-                                padding: const EdgeInsets.only(top: 10),
+                                padding: const EdgeInsets.only(top: 5),
                                 child: Icon(
                                   _.volume.value > 0
                                       ? Icons.music_note
@@ -343,11 +337,8 @@ class _ControlsContainerState extends State<ControlsContainer> {
                 padding: const EdgeInsets.all(10),
                 margin: const EdgeInsets.all(10),
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                    bottomLeft: Radius.circular(10),
-                    bottomRight: Radius.circular(10),
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(40),
                   ),
                   child: SizedBox(
                     height: (widget.responsive.height / 2) + 35,
@@ -360,11 +351,8 @@ class _ControlsContainerState extends State<ControlsContainer> {
                               Theme.of(context).colorScheme.secondaryContainer,
                         ),
                         ClipRRect(
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(40),
-                            topRight: Radius.circular(40),
-                            bottomLeft: Radius.circular(10),
-                            bottomRight: Radius.circular(10),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(40),
                           ),
                           child: Container(
                             height: (_.brightness.value *
@@ -375,7 +363,7 @@ class _ControlsContainerState extends State<ControlsContainer> {
                             child: Align(
                               alignment: Alignment.topCenter,
                               child: Container(
-                                padding: const EdgeInsets.only(top: 10),
+                                padding: const EdgeInsets.only(top: 5),
                                 child: Icon(
                                   Icons.wb_sunny,
                                   color:
