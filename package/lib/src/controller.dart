@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:developer' as dev;
 import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_meedu/meedu.dart';
@@ -101,6 +103,8 @@ class MeeduPlayerController {
   double mouseMoveInitial = 0;
   Timer? _timer;
   Timer? _timerForSeek;
+  Timer? _timerForCheckingSeek;
+
   Timer? _timerForVolume;
   Timer? _timerForShowingVolume;
   Timer? _timerForGettingVolume;
@@ -207,6 +211,9 @@ class MeeduPlayerController {
   /// for defining that video player locked controls
   final Rx<bool> _lockedControls = false.obs;
 
+  /// if the player should automatically hide the controls
+  final bool autoHideControls;
+
   /// controls if widgets inside videoplayer should get focus or not
   final bool excludeFocus;
 
@@ -295,6 +302,7 @@ class MeeduPlayerController {
     this.manageBrightness = true,
     this.showLogs = true,
     this.excludeFocus = true,
+    this.autoHideControls = true,
     String? errorText,
     this.controlsStyle = ControlsStyle.primary,
     this.header,
@@ -413,7 +421,7 @@ class MeeduPlayerController {
 
   void customDebugPrint(Object? object) {
     if (showLogs) {
-      print(object);
+      dev.log(object.toString(), name: "flutter_meedu_videoplayer");
     }
   }
 
@@ -422,7 +430,7 @@ class MeeduPlayerController {
     Duration seekTo = Duration.zero,
   }) async {
     if (seekTo != Duration.zero) {
-      customDebugPrint("Called seek function to$seekTo");
+      customDebugPrint("Called seek function to $seekTo");
       await this.seekTo(seekTo);
     }
 
@@ -557,7 +565,7 @@ class MeeduPlayerController {
 
     playerStatus.status.value = PlayerStatus.playing;
     // screenManager.setOverlays(false);
-    if (hideControls) {
+    if (hideControls && autoHideControls) {
       _hideTaskControls();
     }
     //
@@ -595,28 +603,57 @@ class MeeduPlayerController {
         "duration in seek function is ${duration.value.toString()}");
 
     if (duration.value.inSeconds != 0) {
+      customDebugPrint(
+          "video controller duration ${_videoPlayerController!.value.duration.toString()}");
+
       await _videoPlayerController?.seekTo(position);
+      customDebugPrint("position after seek is ${_position.value.toString()}");
+
+      _checkIfSeekIsSuccess(position);
 
       // if (playerStatus.stopped) {
       //   play();
       // }
     } else {
-      _timerForSeek?.cancel();
-      _timerForSeek =
-          Timer.periodic(const Duration(milliseconds: 200), (Timer t) async {
-        //_timerForSeek = null;
-        customDebugPrint("SEEK CALLED");
-        if (duration.value.inSeconds != 0) {
-          await _videoPlayerController?.seekTo(position);
-
-          // if (playerStatus.stopped) {
-          //   play();
-          // }
-          t.cancel();
-          //_timerForSeek = null;
-        }
-      });
+      _timerForReSeek(position);
     }
+  }
+
+  void _checkIfSeekIsSuccess(Duration position) {
+    _timerForCheckingSeek?.cancel();
+    _timerForCheckingSeek =
+        Timer.periodic(const Duration(milliseconds: 500), (Timer t) async {
+      // customDebugPrint("_position.value: ${_position.value}");
+      // customDebugPrint("position: $position");
+      customDebugPrint(
+          "re seek needed?: ${_position.value.inSeconds < position.inSeconds}");
+
+      if (_position.value.inSeconds < position.inSeconds) {
+        _timerForReSeek(position);
+      }
+      if (_position.value.inSeconds != position.inSeconds ||
+          playerStatus.paused) {
+        t.cancel();
+      }
+    });
+  }
+
+  void _timerForReSeek(Duration position) async {
+    _timerForSeek?.cancel();
+    _timerForSeek =
+        Timer.periodic(const Duration(milliseconds: 200), (Timer t) async {
+      //_timerForSeek = null;
+      customDebugPrint("Re SEEK CALLED");
+      if (duration.value.inSeconds != 0) {
+        await _videoPlayerController?.seekTo(position);
+
+        // if (playerStatus.stopped) {
+        //   play();
+        // }
+        t.cancel();
+        //_timerForSeek = null;
+      }
+    });
   }
 
   /// Sets the playback speed of [this].
@@ -796,7 +833,7 @@ class MeeduPlayerController {
     //customDebugPrint(visible);
     _showControls.value = visible;
     _timer?.cancel();
-    if (visible) {
+    if (visible && autoHideControls) {
       _hideTaskControls();
     }
   }
@@ -900,6 +937,7 @@ class MeeduPlayerController {
     _timerForGettingVolume?.cancel();
     timerForTrackingMouse?.cancel();
     _timerForSeek?.cancel();
+    _timerForCheckingSeek?.cancel();
     videoFitChangedTimer?.cancel();
     _pipModeWorker?.dispose();
     _position.close();
@@ -1013,6 +1051,33 @@ class MeeduPlayerController {
     _videoFit.value = fit;
   }
 
+  ///Sets a closed caption file.
+  ///If [closedCaptionFile] is null, closed captions will be removed.
+  void setClosedCaptionFile(Future<ClosedCaptionFile>? closedCaptionFile) {
+    if (videoPlayerController == null) {
+      customDebugPrint("setClosedCaptionFile: videoPlayerController is null");
+      return;
+    }
+    videoPlayerController!.setClosedCaptionFile(closedCaptionFile);
+  }
+
+  /// Sets the caption offset.
+  ///
+  /// The [offset] will be used when getting the correct caption for a specific position.
+  /// The [offset] can be positive or negative.
+  ///
+  /// The values will be handled as follows:
+  /// *  0: This is the default behavior. No offset will be applied.
+  /// * >0: The caption will have a negative offset. So you will get caption text from the past.
+  /// * <0: The caption will have a positive offset. So you will get caption text from the future.
+  void setCaptionOffset(Duration offset) {
+    if (videoPlayerController == null) {
+      customDebugPrint("setCaptionOffset: videoPlayerController is null");
+      return;
+    }
+    videoPlayerController!.setCaptionOffset(offset);
+  }
+
   /// enter to picture in picture mode only Android
   ///
   /// only available since Android 7
@@ -1077,6 +1142,7 @@ class MeeduPlayerController {
     _timerForGettingVolume?.cancel();
     timerForTrackingMouse?.cancel();
     _timerForSeek?.cancel();
+    _timerForCheckingSeek?.cancel();
     videoFitChangedTimer?.cancel();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _position.value = Duration.zero;
@@ -1104,7 +1170,6 @@ class MeeduPlayerController {
     if (_videoPlayerController == null) {
       return 16 / 9;
     }
-
     return _videoPlayerController!.value.size.width /
         _videoPlayerController!.value.size.height;
   }
