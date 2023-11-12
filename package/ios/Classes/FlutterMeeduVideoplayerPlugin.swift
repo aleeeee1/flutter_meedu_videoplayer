@@ -1,16 +1,22 @@
 import Flutter
 import UIKit
 import AVKit
-import UIPiPView
 
-public class FlutterMeeduVideoplayerPlugin: NSObject, FlutterPlugin {
+public class FlutterMeeduVideoplayerPlugin: NSObject, FlutterPlugin, AVPictureInPictureControllerDelegate {
+    
+    private var channel: FlutterMethodChannel
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "flutter_meedu_videoplayer", binaryMessenger: registrar.messenger())
-        let instance = FlutterMeeduVideoplayerPlugin()
+        let instance = FlutterMeeduVideoplayerPlugin(channel)
         registrar.addMethodCallDelegate(instance, channel: channel);
     }
     
+    init(_ channel: FlutterMethodChannel) {
+        self.channel = channel
+        super.init()
+    }
+  
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
             
