@@ -13,8 +13,8 @@ import 'package:screen_brightness/screen_brightness.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_meedu_videoplayer/meedu_player.dart';
 import 'package:volume_controller/volume_controller.dart';
-import 'package:wakelock/wakelock.dart';
 import 'package:universal_platform/universal_platform.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// An enumeration of the different styles that can be applied to controls, such
@@ -62,7 +62,11 @@ class MeeduPlayerController {
   final bool controlsEnabled;
   String? _errorText;
   String? get errorText => _errorText;
-  Widget? loadingWidget, header, bottomRight, customControls;
+  Widget? loadingWidget, header, bottomRight, customControls, videoOverlay;
+
+  ///[customCaptionView] when a custom view for the captions is needed
+  Widget Function(BuildContext context, MeeduPlayerController controller,
+      Responsive responsive, String text)? customCaptionView;
   final ControlsStyle controlsStyle;
   final bool pipEnabled;
 
@@ -92,9 +96,13 @@ class MeeduPlayerController {
 
   Rx<bool> videoFitChanged = false.obs;
   final Rx<BoxFit> _videoFit;
+
+  final Rx<bool> forceUIRefreshAfterFullScreen = false.obs;
+
   //Rx<double> scale = 1.0.obs;
   Rx<bool> rewindIcons = false.obs;
   Rx<bool> forwardIcons = false.obs;
+
   // NO OBSERVABLES
   bool _isSliderMoving = false;
   bool _looping = false;
@@ -366,12 +374,12 @@ class MeeduPlayerController {
     _playerEventSubs = onPlayerStatusChanged.listen(
       (PlayerStatus status) {
         if (status == PlayerStatus.playing) {
-          if (manageWakeLock && !UniversalPlatform.isLinux) {
-            Wakelock.enable();
+          if (manageWakeLock) {
+            WakelockPlus.enable();
           }
         } else {
-          if (manageWakeLock && !UniversalPlatform.isLinux) {
-            Wakelock.disable();
+          if (manageWakeLock) {
+            WakelockPlus.disable();
           }
         }
       },
@@ -470,7 +478,7 @@ class MeeduPlayerController {
       final lastBufferedEnd = buffered.last.end.inSeconds;
 
       // Check if the video is playing and the position is near the end of the buffer
-      if (VideoPlayerUsed.mediaKit) {
+      if (VideoPlayerUsed.fvp) {
         isBuffering.value =
             value.isPlaying && position.inSeconds > (lastBufferedEnd);
       } else {
@@ -609,52 +617,52 @@ class MeeduPlayerController {
       await _videoPlayerController?.seekTo(position);
       customDebugPrint("position after seek is ${_position.value.toString()}");
 
-      _checkIfSeekIsSuccess(position);
+      // _checkIfSeekIsSuccess(position);
 
       // if (playerStatus.stopped) {
       //   play();
       // }
     } else {
-      _timerForReSeek(position);
+      // _timerForReSeek(position);
     }
   }
 
-  void _checkIfSeekIsSuccess(Duration position) {
-    _timerForCheckingSeek?.cancel();
-    _timerForCheckingSeek =
-        Timer.periodic(const Duration(milliseconds: 500), (Timer t) async {
-      // customDebugPrint("_position.value: ${_position.value}");
-      // customDebugPrint("position: $position");
-      customDebugPrint(
-          "re seek needed?: ${_position.value.inSeconds < position.inSeconds}");
+  // void _checkIfSeekIsSuccess(Duration position) {
+  //   _timerForCheckingSeek?.cancel();
+  //   _timerForCheckingSeek =
+  //       Timer.periodic(const Duration(milliseconds: 500), (Timer t) async {
+  //     customDebugPrint("_position.value: ${_position.value}");
+  //     customDebugPrint("position requested: $position");
+  //     customDebugPrint(
+  //         "re seek needed?: ${_position.value.inSeconds < position.inSeconds}");
 
-      if (_position.value.inSeconds < position.inSeconds) {
-        _timerForReSeek(position);
-      }
-      if (_position.value.inSeconds != position.inSeconds ||
-          playerStatus.paused) {
-        t.cancel();
-      }
-    });
-  }
+  //     if (_position.value.inSeconds < position.inSeconds) {
+  //       _timerForReSeek(position);
+  //     }
+  //     if (_position.value.inSeconds != position.inSeconds ||
+  //         playerStatus.paused) {
+  //       t.cancel();
+  //     }
+  //   });
+  // }
 
-  void _timerForReSeek(Duration position) async {
-    _timerForSeek?.cancel();
-    _timerForSeek =
-        Timer.periodic(const Duration(milliseconds: 200), (Timer t) async {
-      //_timerForSeek = null;
-      customDebugPrint("Re SEEK CALLED");
-      if (duration.value.inSeconds != 0) {
-        await _videoPlayerController?.seekTo(position);
+  // void _timerForReSeek(Duration position) async {
+  //   _timerForSeek?.cancel();
+  //   _timerForSeek =
+  //       Timer.periodic(const Duration(milliseconds: 200), (Timer t) async {
+  //     //_timerForSeek = null;
+  //     customDebugPrint("Re SEEK CALLED");
+  //     if (duration.value.inSeconds != 0) {
+  //       await _videoPlayerController?.seekTo(position);
 
-        // if (playerStatus.stopped) {
-        //   play();
-        // }
-        t.cancel();
-        //_timerForSeek = null;
-      }
-    });
-  }
+  //       // if (playerStatus.stopped) {
+  //       //   play();
+  //       // }
+  //       t.cancel();
+  //       //_timerForSeek = null;
+  //     }
+  //   });
+  // }
 
   /// Sets the playback speed of [this].
   ///
@@ -701,7 +709,7 @@ class MeeduPlayerController {
   }
 
   onChangedSlider(double v) {
-    _sliderPosition.value = Duration(seconds: v.floor());
+    _sliderPosition.value = Duration(milliseconds: v.floor());
     controls = true;
   }
 
@@ -1023,7 +1031,9 @@ class MeeduPlayerController {
           }
         }
       } else {
-        Navigator.pop(context);
+        if (this.fullscreen.value) {
+          Navigator.pop(context);
+        }
       }
     }
   }
@@ -1148,8 +1158,8 @@ class MeeduPlayerController {
       _position.value = Duration.zero;
       _timer?.cancel();
       pause();
-      if (manageWakeLock && !UniversalPlatform.isLinux) {
-        Wakelock.disable();
+      if (manageWakeLock) {
+        WakelockPlus.disable();
       }
 
       _videoPlayerController?.removeListener(_listener);

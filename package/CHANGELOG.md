@@ -1,3 +1,47 @@
+## 4.3.1
+* Updates fvp to `fvp: ^0.3.0`
+## 4.3.0+1
+* fixed slider shifting
+
+## 4.3.0
+* migrating from media_kit due to it crashing apps when used in the package
+* using fvp for desktop and maybe replaced on mobile if people want 
+## 4.2.27
+* migrate to video_player_cross_platform to avoid issues with media_kit
+## 4.2.26
+* media_kit windows version to 1.0.6
+* media_kit linux version to 1.1.0
+
+## 4.2.25
+* set media_kit to 1.1.2+1 to avoid crash on launch
+## 4.2.24
+* Added videoOverlay to help with wrapping widget in both normal and fullScreen
+## 4.2.23
+* Updates to `video_player_media_kit 0.0.23` to use latest version of media_kit, also allows disabling media_kit playback errors
+## 4.2.22
+* Updates to `video_player_media_kit 0.0.22` to fix errors when playing live streams
+## 4.2.21
+* Updating readme versions
+## 4.2.20
+* Updates to `video_player_media_kit 0.0.21` to fix web compilation
+## 4.2.19
+* improved windows closing full screen 
+## 4.2.18
+* fixes macos fullscreen crash
+## 4.2.17
+* Updates to `video_player_media_kit 0.0.20`
+* migrate to wakelock_plus
+## 4.2.16
+* Web fix black screen after closing full screen
+* fix web pause when closing full screen
+## 4.2.15
+* MeeduVideoPlayer can take background color, which gets passed to media_kit widget too
+## 4.2.14
+* Updating packages (video_player,window_manager,video_player_media_kit)
+* Fix Custom caption view (to be contestant when full screen or not)
+* Fix weird slider look when video is short
+* Removed initWindowManagerIfNeeded from initMeeduPlayer, so it can be used separately
+
 ## 4.2.13
 * autoHideControls: can be disabled thanks to [sommye-ctr](https://github.com/sommye-ctr)
 * seek will get recalled if failed to seek.

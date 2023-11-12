@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_meedu_videoplayer/meedu_player.dart';
 import 'package:flutter_meedu_videoplayer/src/widgets/styles/controls_container.dart';
@@ -47,9 +48,19 @@ class MeeduVideoPlayer extends StatefulWidget {
     Responsive responsive,
   )? customControls;
 
+  ///[videoOverlay] can be used to wrap the player in any widget, to apply custom gestures, or apply custom watermarks
+  final Widget Function(
+    BuildContext context,
+    MeeduPlayerController controller,
+    Responsive responsive,
+  )? videoOverlay;
+
   ///[customCaptionView] when a custom view for the captions is needed
   final Widget Function(BuildContext context, MeeduPlayerController controller,
       Responsive responsive, String text)? customCaptionView;
+
+  ///[backgroundColor] video background color
+  final Color backgroundColor;
 
   /// The distance from the bottom of the screen to the closed captions text.
   ///
@@ -71,7 +82,9 @@ class MeeduVideoPlayer extends StatefulWidget {
       this.customIcons,
       this.customControls,
       this.customCaptionView,
-      this.closedCaptionDistanceFromBottom = 40})
+      this.videoOverlay,
+      this.closedCaptionDistanceFromBottom = 40,
+      this.backgroundColor = Colors.black})
       : super(key: key);
 
   @override
@@ -79,6 +92,8 @@ class MeeduVideoPlayer extends StatefulWidget {
 }
 
 class _MeeduVideoPlayerState extends State<MeeduVideoPlayer> {
+  // bool oldUIRefresh = false;
+  ValueKey _key = const ValueKey(true);
   double videoWidth(VideoPlayerController? controller) {
     double width = controller != null
         ? controller.value.size.width != 0
@@ -107,6 +122,23 @@ class _MeeduVideoPlayerState extends State<MeeduVideoPlayer> {
     // }
   }
 
+  void refresh() {
+    if (!kIsWeb) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _key = ValueKey(!_key.value);
+
+        // your state update logic goes here
+      });
+      if (widget.controller.playerStatus.playing) {
+        widget.controller.play();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return CallbackShortcuts(
@@ -116,7 +148,7 @@ class _MeeduVideoPlayerState extends State<MeeduVideoPlayer> {
         child: MeeduPlayerProvider(
           controller: widget.controller,
           child: Container(
-              color: Colors.black,
+              color: widget.backgroundColor,
               child: LayoutBuilder(
                 builder: (ctx, constraints) {
                   MeeduPlayerController _ = widget.controller;
@@ -139,10 +171,16 @@ class _MeeduVideoPlayerState extends State<MeeduVideoPlayer> {
                     _.bottomRight =
                         widget.bottomRight!(context, _, _.responsive);
                   }
-
+                  if (widget.videoOverlay != null) {
+                    _.videoOverlay =
+                        widget.videoOverlay!(context, _, _.responsive);
+                  }
                   if (widget.customControls != null) {
                     _.customControls =
                         widget.customControls!(context, _, _.responsive);
+                  }
+                  if (widget.customCaptionView != null) {
+                    _.customCaptionView = widget.customCaptionView;
                   }
                   return ExcludeFocus(
                     excluding: _.excludeFocus,
@@ -154,6 +192,15 @@ class _MeeduVideoPlayerState extends State<MeeduVideoPlayer> {
                         RxBuilder(
                             //observables: [_.videoFit],
                             (__) {
+                          if (widget
+                              .controller.forceUIRefreshAfterFullScreen.value) {
+                            print("NEEDS TO REFRASH UI");
+                            refresh();
+                            widget.controller.forceUIRefreshAfterFullScreen
+                                .value = false;
+                          }
+                          // widget.controller.forceUIRefreshAfterFullScreen
+                          //     .value = false;
                           _.dataStatus.status.value;
                           _.customDebugPrint(
                               "Fit is ${widget.controller.videoFit.value}");
@@ -177,17 +224,21 @@ class _MeeduVideoPlayerState extends State<MeeduVideoPlayer> {
                                 // width: 640,
                                 // height: 480,
                                 child: _.videoPlayerController != null
-                                    ? VideoPlayer(_.videoPlayerController!)
+                                    ? VideoPlayer(
+                                        _.videoPlayerController!,
+                                        key: _key,
+                                      )
                                     : Container(),
                               ),
                             ),
                           );
                         }),
+                        if (_.videoOverlay != null) _.videoOverlay!,
                         ClosedCaptionView(
                           responsive: _.responsive,
                           distanceFromBottom:
                               widget.closedCaptionDistanceFromBottom,
-                          customCaptionView: widget.customCaptionView,
+                          customCaptionView: _.customCaptionView,
                         ),
                         if (_.controlsEnabled &&
                             _.controlsStyle == ControlsStyle.primary)
